@@ -1,10 +1,30 @@
+use std::ops::{Deref, DerefMut};
 use serde::{Deserialize, Serialize};
+use crate::file::Identifier;
+use crate::file::trace::Trace;
 use crate::lexer::keyword::Keyword;
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct Token(pub TokenData, pub Trace);
+
+impl Deref for Token {
+    type Target = TokenData;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Token {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub enum Token {
-    MacroIdentifier(String),
-    Identifier(String),
+pub enum TokenData {
+    MacroIdentifier(Identifier),
+    Identifier(Identifier),
     Operator(Operator),
     Keyword(Keyword),
     StringLiteral(String),
@@ -12,7 +32,7 @@ pub enum Token {
     F32Literal(f32),
     F64Literal(f64),
     I32Literal(i32),
-    I64Literal(f64),
+    I64Literal(i64),
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Copy, Clone, Hash)]

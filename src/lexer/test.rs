@@ -1,7 +1,8 @@
 use std::rc::Rc;
+use crate::file::Identifier;
 use crate::file::source_file::SourceFile;
 use crate::lexer::lexer;
-use crate::lexer::token::Token;
+use crate::lexer::token::{Operator, Token, TokenData};
 
 #[test]
 pub fn identifier() {
@@ -9,12 +10,12 @@ pub fn identifier() {
         me _wh_en__ the
     "#).rc();
 
-    let tokens: Vec<Token> = crate::lexer::tokenize(file).into_iter().map(|(f, _)| f).collect();
+    let tokens: Vec<TokenData> = crate::lexer::tokenize(file).into_iter().map(|Token(f, _)| f).collect();
 
     assert_eq!(tokens, vec![
-        Token::Identifier("me".into()),
-        Token::Identifier("_wh_en__".into()),
-        Token::Identifier("the".into())]
+        TokenData::Identifier(Identifier::from("me")),
+        TokenData::Identifier(Identifier::from("_wh_en__")),
+        TokenData::Identifier(Identifier::from("the"))]
     );
 }
 
@@ -24,16 +25,16 @@ pub fn bool() {
         true false false true true false true
     "#).rc();
 
-    let tokens: Vec<Token> = crate::lexer::tokenize(file).into_iter().map(|(f, _)| f).collect();
+    let tokens: Vec<TokenData> = crate::lexer::tokenize(file).into_iter().map(|Token(f, _)| f).collect();
 
     assert_eq!(tokens, vec![
-        Token::BoolLiteral(true),
-        Token::BoolLiteral(false),
-        Token::BoolLiteral(false),
-        Token::BoolLiteral(true),
-        Token::BoolLiteral(true),
-        Token::BoolLiteral(false),
-        Token::BoolLiteral(true),
+        TokenData::BoolLiteral(true),
+        TokenData::BoolLiteral(false),
+        TokenData::BoolLiteral(false),
+        TokenData::BoolLiteral(true),
+        TokenData::BoolLiteral(true),
+        TokenData::BoolLiteral(false),
+        TokenData::BoolLiteral(true),
     ]);
 }
 
@@ -47,7 +48,7 @@ pub fn test_operator() {
     -= += /= <<= >>= &&= ||= <= >= != == . ,
     "#).rc();
 
-    let tokens: Vec<Token> = crate::lexer::tokenize(file).into_iter().map(|(f, _)| f).collect();
+    let tokens: Vec<TokenData> = crate::lexer::tokenize(file).into_iter().map(|Token(f, _)| f).collect();
     assert_eq!(tokens, [
         E::CurlyOpen,
         E::CurlyClose,
@@ -91,7 +92,7 @@ pub fn test_operator() {
         E::Equals,
         E::Dot,
         E::Comma,
-    ].map(|o| Token::Operator(o)).into_iter().collect::<Vec<Token>>());
+    ].map(|o| TokenData::Operator(o)).into_iter().collect::<Vec<TokenData>>());
 }
 
 #[test]
@@ -99,11 +100,47 @@ fn string() {
     let file = SourceFile::new(r#"
         "me when the \" ""yuh"
     "#).rc();
-
-    let tokens: Vec<Token> = crate::lexer::tokenize(file).into_iter().map(|(f, _)| f).collect();
+    let tokens: Vec<TokenData> = crate::lexer::tokenize(file).into_iter().map(|Token(f, _)| f).collect();
 
     assert_eq!(tokens, vec![
-        Token::StringLiteral("me when the \" ".into()),
-        Token::StringLiteral("yuh".into()),
+        TokenData::StringLiteral("me when the \" ".into()),
+        TokenData::StringLiteral("yuh".into()),
+    ]);
+}
+
+#[test]
+fn number() {
+    let file = SourceFile::new(r#"
+        1 4 2.0. 9L 2.f 10.0d 0.1f
+    "#).rc();
+    let tokens: Vec<TokenData> = crate::lexer::tokenize(file).into_iter().map(|Token(f, _)| f).collect();
+
+    assert_eq!(tokens, vec![
+        TokenData::I32Literal(1),
+        TokenData::I32Literal(4),
+        TokenData::F32Literal(2.0),
+        TokenData::Operator(Operator::Dot),
+        TokenData::I64Literal(9),
+        TokenData::F32Literal(2.),
+        TokenData::F64Literal(10.),
+        TokenData::F32Literal(0.1f32),
+    ]);
+}
+
+#[test]
+fn test_macro() {
+    let file = SourceFile::new(r#"
+        bruh moment.println!("huh")
+    "#).rc();
+    let tokens: Vec<TokenData> = crate::lexer::tokenize(file).into_iter().map(|Token(f, _)| f).collect();
+
+    assert_eq!(tokens, vec![
+        TokenData::Identifier("bruh".into()),
+        TokenData::Identifier("moment".into()),
+        TokenData::Operator(Operator::Dot),
+        TokenData::MacroIdentifier("println!".into()),
+        TokenData::Operator(Operator::ParenOpen),
+        TokenData::StringLiteral("huh".into()),
+        TokenData::Operator(Operator::ParenClose),
     ]);
 }

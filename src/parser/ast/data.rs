@@ -2,12 +2,12 @@ use serde::{Deserialize, Serialize};
 use crate::file::Identifier;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Hash)]
-pub enum UnparsedType {
+pub enum UnvalidatedType {
     Type(Identifier),
-    Reference(Box<UnparsedType>),
+    Reference(Box<UnvalidatedType>),
     Template {
-        owner: Box<UnparsedType>,
-        template_arguments: Vec<UnparsedType>,
+        owner: Box<UnvalidatedType>,
+        template_arguments: Vec<UnvalidatedType>,
     },
     Implicit,
 }
@@ -15,6 +15,6 @@ pub enum UnparsedType {
 #[derive(Debug, PartialEq, Serialize, Deserialize, Hash)]
 pub struct UnparsedVariableInfo {
     pub ident: Identifier,
-    pub ty: UnparsedType,
+    pub ty: UnvalidatedType,
     pub mutable: bool,
 }

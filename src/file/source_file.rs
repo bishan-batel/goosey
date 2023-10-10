@@ -3,10 +3,11 @@ use std::io::Read;
 use std::ops::Range;
 use std::path::Path;
 use std::rc::Rc;
+use serde::{Deserialize, Serialize};
 use crate::file::Identifier;
 use crate::file::trace::Trace;
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct SourceFile {
     pub module_name: Identifier,
     pub source: String,
@@ -15,8 +16,8 @@ pub struct SourceFile {
 impl SourceFile {
     pub fn new(source: &str) -> Self {
         Self {
-            module_name: Identifier("<main>".into()),
-            source: source.into(),
+            module_name: "<main>".into(),
+            source: String::from(source),
         }
     }
 

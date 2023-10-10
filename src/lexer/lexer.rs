@@ -1,8 +1,9 @@
 use std::rc::Rc;
+use crate::file::Identifier;
 use crate::file::source_file::SourceFile;
 use crate::file::trace::Trace;
 use crate::lexer::keyword::Keyword;
-use crate::lexer::token::Token;
+use crate::lexer::token::{Token, TokenData};
 
 #[derive(Debug)]
 pub struct Lexer {
@@ -53,18 +54,17 @@ impl Lexer {
         self.index + i <= self.file.source.len()
     }
 
-    pub fn tokenize(mut self) -> Vec<(Token, Trace)> {
+    pub fn tokenize(mut self) -> Vec<Token> {
         let passes = &[
-            Self::identifier,
             Self::string,
             Self::number,
+            Self::identifier,
             Self::tri_operator,
             Self::dual_operator,
             Self::operator
         ];
 
         let mut toks = vec![];
-
         while self.not_eof() {
             if self.curr().is_whitespace() {
                 self.advance();
@@ -104,7 +104,7 @@ impl Lexer {
         }
     }
 
-    pub fn identifier(&mut self) -> Option<(Token, Trace)> {
+    pub fn identifier(&mut self) -> Option<Token> {
         if !self.curr().is_ascii_alphabetic() && self.curr() != '_' {
             return None;
         }
@@ -116,25 +116,34 @@ impl Lexer {
         if self.curr() == '!' {
             self.advance();
             let slice = &self.file.source[start..self.index];
-            let tok = Token::MacroIdentifier(String::from(slice));
+            let tok = TokenData::MacroIdentifier(Identifier::from(slice));
 
-            return Some((tok, self.trace_from(start, slice.len())));
+            return Some(Token(tok, self.trace_from(start, slice.len())));
         }
 
         let ident = &self.file.source[start..self.index];
 
         if let Some(keyword) = Keyword::parse(ident) {
-            Some((Token::Keyword(keyword), self.trace_from(start, ident.len())))
+            Some(Token(TokenData::Keyword(keyword), self.trace_from(start, ident.len())))
         } else {
             Some(match ident {
-                "true" => (Token::BoolLiteral(true), self.trace_from(start, "true".len())),
-                "false" => (Token::BoolLiteral(false), self.trace_from(start, "false".len())),
-                _ => (Token::Identifier(ident.into()), self.trace_from(start, ident.len()))
+                "true" => Token(
+                    TokenData::BoolLiteral(true),
+                    self.trace_from(start, "true".len()),
+                ),
+                "false" => Token(
+                    TokenData::BoolLiteral(false),
+                    self.trace_from(start, "false".len()),
+                ),
+                _ => Token(
+                    TokenData::Identifier(Identifier::from(ident)),
+                    self.trace_from(start, ident.len()),
+                )
             })
         }
     }
 
-    pub fn string(&mut self) -> Option<(Token, Trace)> {
+    pub fn string(&mut self) -> Option<Token> {
         if self.curr() != '"' {
             return None;
         }
@@ -151,22 +160,92 @@ impl Lexer {
         }
         self.advance();
 
-        let tok = Token::StringLiteral(builder.string().expect("UTF8 Error"));
-        Some((tok, self.trace_from(start, self.index - 1)))
+        let tok = TokenData::StringLiteral(builder.string().expect("UTF8 Error"));
+        Some(Token(
+            tok,
+            self.trace_from(start, self.index - 1),
+        ))
     }
 
-    pub fn number(&mut self) -> Option<(Token, Trace)> {
-        if !(self.curr().is_ascii_digit() || self.curr() != '.') {
+    pub fn number(&mut self) -> Option<Token> {
+        if !self.curr().is_ascii_digit() && !(self.curr() == '.') {
             return None;
         }
 
-        None
+        let start = self.index;
+        let mut has_dot = false;
+
+        loop {
+            if self.curr() == '.' && !has_dot {
+                has_dot = true;
+            } else if !self.curr().is_ascii_digit() {
+                break;
+            }
+            self.advance();
+        }
+
+        // if the only character is a dot then skip
+        if has_dot && self.index - start == 1 {
+            self.index = start;
+            return None;
+        }
+
+        let num_sub = String::from(&self.file.source[start..self.index]);
+
+        match self.curr() {
+            // Explicit 32 bit float
+            'f' => {
+                self.advance();
+
+                return Some(Token(
+                    TokenData::F32Literal(num_sub.parse().unwrap()),
+                    self.file.trace(start..self.index),
+                ));
+            }
+
+            // Explicit 64 bit double
+            'd' => {
+                self.advance();
+                return Some(
+                    Token(
+                        TokenData::F64Literal(num_sub.parse().unwrap()),
+                        self.file.trace(start..self.index),
+                    ));
+            }
+            _ => {}
+        };
+
+
+        // if no valid suffix but has a dot, assume is 32 bit float
+        if has_dot {
+            return Some(Token(
+                TokenData::F32Literal(num_sub.parse().unwrap()),
+                self.file.trace(start..self.index),
+            ));
+        }
+
+        match self.curr() {
+            // L suffix with no dot assumes 64 bit integer
+            'L' => {
+                self.advance();
+                Some(Token(
+                    TokenData::I64Literal(num_sub.parse().unwrap()),
+                    self.file.trace(start..self.index),
+                ))
+            }
+
+            // assume i32 literal if not specified
+            _ => Some(Token(
+                TokenData::I32Literal(num_sub.parse().unwrap()),
+                self.file.trace(start..self.index),
+            ))
+        }
     }
 
-    pub fn operator(&mut self) -> Option<(Token, Trace)> {
+    pub fn operator(&mut self) -> Option<Token> {
         use super::token::Operator as E;
 
-        let op = Token::Operator(match self.curr() {
+        let op = match self.curr() {
             '{' => E::CurlyOpen,
             '}' => E::CurlyClose,
             '(' => E::ParenOpen,
@@ -190,18 +269,18 @@ impl Lexer {
             ',' => E::Comma,
             ':' => E::Colon,
             _ => return None
-        });
+        };
         self.advance();
-        Some((op, self.trace(1)))
+        Some(Token(TokenData::Operator(op), self.trace(1)))
     }
 
-    pub fn dual_operator(&mut self) -> Option<(Token, Trace)> {
+    pub fn dual_operator(&mut self) -> Option<Token> {
         if !self.has_clearance(2) {
             return None;
         }
 
         use super::token::Operator as E;
-        let op = Some((Token::Operator(match self.slice(2) {
+        let op = match self.slice(2) {
             "&&" => E::And,
             "||" => E::Or,
             "<<" => E::BitShiftLeft,
@@ -220,26 +299,28 @@ impl Lexer {
             "::" => E::DoubleColon,
 
             _ => return None
-        }), self.trace(2)));
+        };
+        let trace = self.trace(2);
         self.advance_by(2);
-        op
+        Some(Token(TokenData::Operator(op), trace))
     }
 
-    pub fn tri_operator(&mut self) -> Option<(Token, Trace)> {
+    pub fn tri_operator(&mut self) -> Option<Token> {
         if !self.has_clearance(3) {
             return None;
         }
 
         use super::token::Operator as E;
-        let op = Some((Token::Operator(match self.slice(3) {
+        let op = match self.slice(3) {
             "<<=" => E::BitShiftLeftAssign,
             ">>=" => E::BitShiftRightAssign,
             "&&=" => E::AndAssign,
             "||=" => E::OrAssign,
             _ => return None
-        }), self.trace(3)));
+        };
+        let trace = self.trace(3);
         self.advance_by(3);
 
-        op
+        Some(Token(TokenData::Operator(op), trace))
     }
 }

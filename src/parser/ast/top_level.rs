@@ -1,21 +1,22 @@
 use serde::{Deserialize, Serialize};
 use crate::file::Identifier;
-use crate::parser::ast::data::{UnparsedType, UnparsedVariableInfo};
-use crate::parser::ast::expression::Expression;
-use crate::parser::ast::function::{UnparsedFunctionPrototype, UnparsedFunctionStatement};
+use crate::parser::ast::data::{UnvalidatedType, UnparsedVariableInfo};
+use crate::parser::ast::expression::UnvalidatedExpression;
+use crate::parser::ast::function::{UnparsedFunctionPrototype, UnvalidatedFunctionExpression};
+use crate::parser::ast::r#struct::{UnvalidatedStructProperty, UnvalidatedStructPrototype};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Hash)]
 pub enum UnparsedTopLevel {
     FunctionDefinition {
         proto: UnparsedFunctionPrototype,
-        body: UnparsedFunctionStatement,
+        body: UnvalidatedFunctionExpression,
     },
     StructDefinition {
-        name: Identifier
+        proto: UnvalidatedStructPrototype
     },
     GlobalVariable {
         variable: UnparsedVariableInfo,
-        initial: Expression,
+        initial: UnvalidatedExpression,
     },
     Import {
         path: Vec<Identifier>,
