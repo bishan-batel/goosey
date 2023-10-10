@@ -1,0 +1,6 @@
+
+struct Bruh {
+}
+
+export fun main(argc: i32, argv: ref[str])  {
+}

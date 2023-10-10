@@ -1,0 +1,16 @@
+[package]
+name = "goosey"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clang = "2.0.0"
+clap = "4.4.6"
+emojis = "0.6.1"
+lazy_static = "1.4.0"
+mlua = { version = "0.9.1", features = ["luajit"] }
+serde = { version = "1.0.188", features = ["derive"] }
+serde_json = "1.0.107"
+string-builder = "0.2.0"
