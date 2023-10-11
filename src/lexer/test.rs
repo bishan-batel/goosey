@@ -1,7 +1,7 @@
-use std::rc::Rc;
+
 use crate::file::identifier::Identifier;
 use crate::file::source_file::SourceFile;
-use crate::lexer::lexer;
+
 use crate::lexer::token::{Operator, Token, TokenData};
 
 #[test]

@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
-use crate::file::identifier::{Identifier, Namespace};
+
+use crate::file::identifier::{Namespace};
 use crate::file::trace::Trace;
-use crate::parser::ast::data::{UnvalidatedType, UnparsedVariableInfo};
+use crate::parser::ast::data::{UnparsedVariableInfo};
 use crate::parser::ast::expression::UnvalidatedExpression;
 use crate::parser::ast::function::{UnparsedFunctionPrototype, UnvalidatedFunctionExpression};
 use crate::parser::ast::r#struct::{UnvalidatedStructProperty, UnvalidatedStructPrototype};

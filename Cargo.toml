@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clang = "2.0.0"
+#clang = "2.0.0"
 clap = "4.4.6"
 either = "1.9.0"
 emojis = "0.6.1"

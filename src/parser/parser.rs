@@ -92,7 +92,7 @@ impl Parser {
         }
     }
 
-    pub fn parse(mut self) -> ParserResult<Vec<UnparsedTopLevel>> {
+    pub fn parse(self) -> ParserResult<Vec<UnparsedTopLevel>> {
         let levels = vec![];
 
         Ok(levels)

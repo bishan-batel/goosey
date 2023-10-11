@@ -1,8 +1,8 @@
 use std::rc::Rc;
 use crate::file::source_file::SourceFile;
-use crate::file::trace::Trace;
+
 use crate::lexer::lexer::Lexer;
-use crate::lexer::token::{Token, TokenData};
+use crate::lexer::token::{Token};
 
 mod lexer;
 pub mod token;
