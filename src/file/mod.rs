@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 pub mod source_file;
 pub mod trace;
 
+pub struct GlobalIdentifier(Vec<Identifier>);
+
 #[derive(Debug, PartialEq, Serialize, Deserialize, Hash, Clone)]
 pub struct Identifier(pub String);
 

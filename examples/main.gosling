@@ -1,12 +1,7 @@
-import std.io.*
-import "stdio.h"
-
 export fun main(argc: i32, argv: ref[ref[char]])  {
-	let num = 0
-
 	unless i32::try_parse(ref num) {
-		println!("{num} is Invalid")
-		return
+		println!("{num} is Invalid") 
+		return;
 	}
 
 	let fizz = num % 3 == 0
@@ -18,5 +13,28 @@ export fun main(argc: i32, argv: ref[ref[char]])  {
 		if fizz then print!("Fuzz")
 		if buzz then print!("buzz")
 		println!()
+	}
+}
+
+
+
+export enum Response {
+	Info
+	Success
+	Redirect
+	ClientError
+	ServerError
+	Invalid
+}
+
+
+export fun parse_http_code(num: i32): HTTPResponse {
+	return match num / 100 {
+		1 => Response::Info
+		2 => Response::Success
+		3 => Response::Redirect 
+		4 => Response::ClientError 
+		5 => Response::ServerError 
+		default _ => Response::Invalid 
 	}
 }

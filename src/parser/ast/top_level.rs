@@ -5,7 +5,7 @@ use crate::parser::ast::expression::UnvalidatedExpression;
 use crate::parser::ast::function::{UnparsedFunctionPrototype, UnvalidatedFunctionExpression};
 use crate::parser::ast::r#struct::{UnvalidatedStructProperty, UnvalidatedStructPrototype};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Hash)]
+#[derive(Debug, PartialEq)]
 pub enum UnparsedTopLevel {
     FunctionDefinition {
         proto: UnparsedFunctionPrototype,

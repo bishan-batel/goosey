@@ -10,6 +10,7 @@ pub enum UnvalidatedType {
         template_arguments: Vec<UnvalidatedType>,
     },
     Implicit,
+    Unit,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Hash)]
