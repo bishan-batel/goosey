@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use crate::file::Identifier;
+use crate::file::identifier::Identifier;
 use crate::file::source_file::SourceFile;
 use crate::lexer::lexer;
 use crate::lexer::token::{Operator, Token, TokenData};
@@ -15,8 +15,9 @@ pub fn identifier() {
     assert_eq!(tokens, vec![
         TokenData::Identifier(Identifier::from("me")),
         TokenData::Identifier(Identifier::from("_wh_en__")),
-        TokenData::Identifier(Identifier::from("the"))]
-    );
+        TokenData::Identifier(Identifier::from("the")),
+        TokenData::EOF,
+    ]);
 }
 
 #[test]
@@ -34,7 +35,8 @@ pub fn bool() {
         TokenData::BoolLiteral(true),
         TokenData::BoolLiteral(true),
         TokenData::BoolLiteral(false),
-        TokenData::BoolLiteral(true),
+        TokenData::BoolLiteral(true)
+        , TokenData::EOF,
     ]);
 }
 
@@ -49,7 +51,7 @@ pub fn test_operator() {
     "#).rc();
 
     let tokens: Vec<TokenData> = crate::lexer::tokenize(file).into_iter().map(|Token(f, _)| f).collect();
-    assert_eq!(tokens, [
+    let mut expect = [
         E::CurlyOpen,
         E::CurlyClose,
         E::ParenOpen,
@@ -92,7 +94,9 @@ pub fn test_operator() {
         E::Equals,
         E::Dot,
         E::Comma,
-    ].map(|o| TokenData::Operator(o)).into_iter().collect::<Vec<TokenData>>());
+    ].map(|o| TokenData::Operator(o)).into_iter().collect::<Vec<TokenData>>();
+    expect.push(TokenData::EOF);
+    assert_eq!(tokens, expect)
 }
 
 #[test]
@@ -105,6 +109,7 @@ fn string() {
     assert_eq!(tokens, vec![
         TokenData::StringLiteral("me when the \" ".into()),
         TokenData::StringLiteral("yuh".into()),
+        TokenData::EOF,
     ]);
 }
 
@@ -124,6 +129,7 @@ fn number() {
         TokenData::F32Literal(2.),
         TokenData::F64Literal(10.),
         TokenData::F32Literal(0.1f32),
+        TokenData::EOF,
     ]);
 }
 
@@ -142,5 +148,6 @@ fn test_macro() {
         TokenData::Operator(Operator::ParenOpen),
         TokenData::StringLiteral("huh".into()),
         TokenData::Operator(Operator::ParenClose),
+        TokenData::EOF,
     ]);
 }

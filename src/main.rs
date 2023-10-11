@@ -1,3 +1,5 @@
+use crate::lexer::token::Operator::ParenOpen;
+
 mod lexer;
 mod file;
 mod parser;

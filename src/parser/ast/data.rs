@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::file::Identifier;
+use crate::file::identifier::Identifier;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Hash)]
 pub enum UnvalidatedType {

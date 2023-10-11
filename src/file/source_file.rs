@@ -4,7 +4,7 @@ use std::ops::Range;
 use std::path::Path;
 use std::rc::Rc;
 use serde::{Deserialize, Serialize};
-use crate::file::Identifier;
+use crate::file::identifier::Identifier;
 use crate::file::trace::Trace;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]

@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::file::Identifier;
+use crate::file::identifier::Identifier;
 use crate::parser::ast::data::UnvalidatedType;
 use crate::ir::visibility::Visibility;
 

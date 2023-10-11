@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::file::Identifier;
+use crate::file::identifier::Identifier;
 use crate::file::trace::Trace;
 use crate::parser::ast::data::{UnvalidatedType, UnparsedVariableInfo};
 use crate::parser::ast::expression::UnvalidatedExpression;

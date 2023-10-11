@@ -1,8 +1,28 @@
-export fun main(argc: i32, argv: ref[ref[char]])  {
+pub struct Vector2 {
+	pub x: f32 
+	pub y: f32
+}
+
+pub fun main(argc: i32, argv: ref[ref[char]])  { 
+	let vec = Vector2::new(x, y)
+
+	let a = argc
+
+	let a = a
+
+	let mut i = 0 i += 1 println!()
+
+
 	unless i32::try_parse(ref num) {
 		println!("{num} is Invalid") 
-		return;
+		return
 	}
+
+	if (bruh) {
+		
+	}
+
+	let num = 0
 
 	let fizz = num % 3 == 0
 	let buzz = num % 5 == 0 
@@ -18,17 +38,20 @@ export fun main(argc: i32, argv: ref[ref[char]])  {
 
 
 
-export enum Response {
-	Info
-	Success
-	Redirect
+pub enum Response {
+	Info 
+	Success 
+	Redirect 
 	ClientError
 	ServerError
 	Invalid
 }
 
+fun bruh() {
+}
 
-export fun parse_http_code(num: i32): HTTPResponse {
+pub fun parse_http_code(num: i32): HTTPResponse {
+	
 	return match num / 100 {
 		1 => Response::Info
 		2 => Response::Success

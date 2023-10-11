@@ -1,8 +1,7 @@
-use serde::{Deserialize, Serialize};
+use crate::file::identifier::{Identifier, Namespace};
 use crate::file::trace::Trace;
-use crate::lexer::token::Operator;
-use crate::parser::ast::data::UnparsedVariableInfo;
 use crate::parser::ast::function::UnvalidatedFunctionExpression;
+use crate::parser::ast::operations::BinaryOperation;
 
 #[derive(Debug, PartialEq)]
 pub enum UnvalidatedExpression {
@@ -12,19 +11,40 @@ pub enum UnvalidatedExpression {
         then: Box<UnvalidatedFunctionExpression>,
         otherwise: Box<UnvalidatedFunctionExpression>,
     },
-    Scope(Vec<UnvalidatedFunctionExpression>),
+    Scope(Vec<UnvalidatedFunctionExpression>, Trace),
 
-    BoolLiteral(bool),
-    I32Literal(f32),
-    I64Literal(f64),
-    StringLiteral(String),
+    BoolLiteral(bool, Trace),
+    I32Literal(f32, Trace),
+    I64Literal(f64, Trace),
+    StringLiteral(String, Trace),
 
     Parenthetical {
         expr: Box<UnvalidatedExpression>,
     },
     BinaryExpression {
+        /// Left hand Side
         lhs: Box<UnvalidatedExpression>,
-        op: Operator,
+
+        /// Binary Operator
+        op: BinaryOperation,
         rhs: Box<UnvalidatedExpression>,
+        trace: Trace,
     },
+    FunctionCall {
+        explicit_namespace: Namespace,
+        ident: Identifier,
+        trace: Trace,
+    },
+
+    VariableReference {
+        explicit_namespace: Namespace,
+        ident: Identifier,
+        trace: Trace,
+    },
+    ObjectProperty {
+        object: Box<UnvalidatedExpression>,
+        identifier: Identifier,
+        trace: Trace,
+    },
+    ObjectMethod {},
 }

@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use crate::file::Identifier;
+use crate::file::identifier::Identifier;
 use crate::file::source_file::SourceFile;
 use crate::file::trace::Trace;
 use crate::lexer::keyword::Keyword;
@@ -82,6 +82,10 @@ impl Lexer {
                 }
             }
         }
+
+        toks.push(Token(
+            TokenData::EOF, self.trace(1),
+        ));
 
         toks
     }
