@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 #clang = "2.0.0"
-clap = "4.4.6"
+clap = { version = "4.4.6", features = ["derive"] }
 either = "1.9.0"
 emojis = "0.6.1"
 lazy_static = "1.4.0"
