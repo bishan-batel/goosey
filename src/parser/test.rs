@@ -12,12 +12,13 @@ use crate::parser::ast::UnvalidatedSymbol;
 use crate::parser::error::ParserResult;
 use crate::parser::parser::Parser;
 
-fn parse_from(source: &str) -> (ParserResult<Vec<UnparsedTopLevel>>, Trace) {
+fn parse_from(source: &str) -> (ParserResult<Vec<UnparsedTopLevel>>, Box<dyn Fn() -> Trace>) {
     let source = SourceFile::new(source).rc();
     let trace = source.trace(0..0);
     let tokens = crate::lexer::tokenize(Rc::clone(&source));
 
-    (Parser::new(source, tokens).parse(), trace)
+    let trace = move || trace.clone();
+    (Parser::new(source, tokens).parse(), Box::new(trace))
 }
 
 #[test]
@@ -36,8 +37,8 @@ fn function_proto() {
                 returns: UnvalidatedType::Unit,
                 visibility: Visibility::Private,
             },
-            body: UnvalidatedExpression::Scope(vec![], trace.clone()).into(),
-            trace: trace.clone(),
+            body: UnvalidatedExpression::Scope(vec![], trace()).into(),
+            trace: trace(),
         },
         UnparsedTopLevel::FunctionDefinition {
             proto: UnparsedFunctionPrototype {
@@ -57,8 +58,8 @@ fn function_proto() {
                 returns: UnvalidatedType::Unit,
                 visibility: Visibility::Public,
             },
-            body: UnvalidatedExpression::Scope(vec![], trace.clone()).into(),
-            trace: trace.clone(),
+            body: UnvalidatedExpression::Scope(vec![], trace()).into(),
+            trace: trace(),
         },
         UnparsedTopLevel::FunctionDefinition {
             proto: UnparsedFunctionPrototype {
@@ -67,8 +68,8 @@ fn function_proto() {
                 returns: UnvalidatedType::Reference(Box::new(UnvalidatedType::Type("i32".into()))),
                 visibility: Visibility::Private,
             },
-            body: UnvalidatedExpression::Scope(vec![], trace.clone()).into(),
-            trace: trace.clone(),
+            body: UnvalidatedExpression::Scope(vec![], trace()).into(),
+            trace: trace(),
         },
     ]))
 }
@@ -87,20 +88,18 @@ fn function_oneline() {
                 returns: UnvalidatedType::Unit,
                 visibility: Visibility::Private,
             },
-            body: UnvalidatedExpression::I32Literal(69, trace.clone()).into(),
-            trace: trace.clone(),
+            body: UnvalidatedExpression::I32Literal(69, trace()).into(),
+            trace: trace(),
         },
     ]))
 }
 
 #[test]
 fn function_operator_precedence() {
-    let (vecs, trace_templ) = parse_from(r"
+    let (vecs, trace) = parse_from(r"
         fun funny() =>
         2 = 1*2 / 4 + (2 + 5)
     ");
-
-    let trace = || trace_templ.clone();
 
     use UnvalidatedExpression as E;
 
@@ -153,7 +152,6 @@ fn function_symbols() {
         }
     "##);
 
-    let trace = || trace.clone();
 
     use UnvalidatedExpression as E;
 

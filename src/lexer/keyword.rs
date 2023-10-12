@@ -19,6 +19,7 @@ pub enum Keyword {
     Public,
     Until,
     If,
+    Unit,
 }
 
 impl Keyword {
@@ -42,6 +43,7 @@ impl Keyword {
             "sizeof" => E::Sizeof,
             "as" => E::As,
             "pub" => E::Public,
+            "unit" => E::Unit,
             _ => return None
         })
     }

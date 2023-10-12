@@ -19,12 +19,22 @@ pub enum UnvalidatedFunctionExpression {
     // an single if can not evaluated to an expression
     If {
         condition: UnvalidatedExpression,
-        then: Box<UnvalidatedFunctionExpression>,
+        then: Box<UnvalidatedExpression>,
+        trace: Trace,
+    },
+    Unless {
+        condition: UnvalidatedExpression,
+        then: Box<UnvalidatedExpression>,
         trace: Trace,
     },
     While {
         condition: UnvalidatedExpression,
-        then: Box<UnvalidatedFunctionExpression>,
+        then: Box<UnvalidatedExpression>,
+        trace: Trace,
+    },
+    Until {
+        condition: UnvalidatedExpression,
+        then: Box<UnvalidatedExpression>,
         trace: Trace,
     },
     Let {
