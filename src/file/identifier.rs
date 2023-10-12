@@ -6,7 +6,7 @@ use std::ops::Deref;
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct GlobalIdentifier(pub Namespace, pub Identifier);
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Hash, Clone)]
 pub struct Namespace {
     pub chain: Vec<Identifier>,
 }

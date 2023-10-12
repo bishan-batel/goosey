@@ -78,6 +78,8 @@ pub enum Operator {
     BitShiftLeft,
     BitShiftRight,
     DoubleColon,
+    ThickRightArrow,
+    ThinRightArrow,
 
     ModAssigns,
     XorAssign,

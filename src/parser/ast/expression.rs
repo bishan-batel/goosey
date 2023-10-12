@@ -1,7 +1,9 @@
 use crate::file::identifier::{Identifier, Namespace};
 use crate::file::trace::Trace;
+use crate::parser::ast::data::UnvalidatedType;
 use crate::parser::ast::function::UnvalidatedFunctionExpression;
 use crate::parser::ast::operations::BinaryOperation;
+use crate::parser::ast::UnvalidatedSymbol;
 
 #[derive(Debug, PartialEq)]
 pub enum UnvalidatedExpression {
@@ -10,18 +12,19 @@ pub enum UnvalidatedExpression {
         condition: Box<UnvalidatedExpression>,
         then: Box<UnvalidatedFunctionExpression>,
         otherwise: Box<UnvalidatedFunctionExpression>,
+        trace: Trace,
     },
     Scope(Vec<UnvalidatedFunctionExpression>, Trace),
 
     BoolLiteral(bool, Trace),
-    I32Literal(f32, Trace),
-    I64Literal(f64, Trace),
+    F32Literal(f32, Trace),
+    F64Literal(f64, Trace),
+    I32Literal(i32, Trace),
+    I64Literal(i64, Trace),
     StringLiteral(String, Trace),
 
-    Parenthetical {
-        expr: Box<UnvalidatedExpression>,
-    },
-    BinaryExpression {
+    Parenthetical(Box<UnvalidatedExpression>, Trace),
+    Binary {
         /// Left hand Side
         lhs: Box<UnvalidatedExpression>,
 
@@ -30,15 +33,18 @@ pub enum UnvalidatedExpression {
         rhs: Box<UnvalidatedExpression>,
         trace: Trace,
     },
-    FunctionCall {
-        explicit_namespace: Namespace,
-        ident: Identifier,
+    Cast {
+        expr: Box<UnvalidatedExpression>,
+        ty: UnvalidatedType,
         trace: Trace,
     },
-
+    FunctionCall {
+        symbol: UnvalidatedSymbol,
+        arguments: Vec<UnvalidatedExpression>,
+        trace: Trace,
+    },
     VariableReference {
-        explicit_namespace: Namespace,
-        ident: Identifier,
+        symbol: UnvalidatedSymbol,
         trace: Trace,
     },
     ObjectProperty {
@@ -46,5 +52,36 @@ pub enum UnvalidatedExpression {
         identifier: Identifier,
         trace: Trace,
     },
-    ObjectMethod {},
+}
+
+impl Into<UnvalidatedFunctionExpression> for UnvalidatedExpression {
+    fn into(self) -> UnvalidatedFunctionExpression {
+        UnvalidatedFunctionExpression::Expression(self)
+    }
+}
+
+impl UnvalidatedExpression {
+    pub fn trace(&self) -> Trace {
+        (match self {
+            UnvalidatedExpression::IfElse {
+                condition: _,
+                then: _,
+                otherwise: _,
+                trace
+            } => trace,
+            UnvalidatedExpression::Scope(_, trace) => trace,
+            UnvalidatedExpression::BoolLiteral(_, trace) => trace,
+            UnvalidatedExpression::I32Literal(_, trace) => trace,
+            UnvalidatedExpression::I64Literal(_, trace) => trace,
+            UnvalidatedExpression::StringLiteral(_, trace) => trace,
+            UnvalidatedExpression::Parenthetical(_, trace) => trace,
+            UnvalidatedExpression::F32Literal(_, trace) => trace,
+            UnvalidatedExpression::F64Literal(_, trace) => trace,
+            UnvalidatedExpression::Binary { trace, .. } => trace,
+            UnvalidatedExpression::FunctionCall { trace, .. } => trace,
+            UnvalidatedExpression::VariableReference { trace, .. } => trace,
+            UnvalidatedExpression::ObjectProperty { .. } => todo!(),
+            UnvalidatedExpression::Cast { trace, .. } => trace,
+        }).clone()
+    }
 }

@@ -16,6 +16,9 @@ pub enum Keyword {
     Impl,
     Sizeof,
     As,
+    Public,
+    Until,
+    If,
 }
 
 impl Keyword {
@@ -31,11 +34,14 @@ impl Keyword {
             "for" => E::For,
             "while" => E::While,
             "unless" => E::Unless,
+            "until" => E::Until,
+            "if" => E::If,
             "else" => E::Else,
             "struct" => E::Struct,
             "impl" => E::Impl,
             "sizeof" => E::Sizeof,
             "as" => E::As,
+            "pub" => E::Public,
             _ => return None
         })
     }

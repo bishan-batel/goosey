@@ -28,7 +28,8 @@ impl Lexer {
     }
 
     pub fn trace(&self, offset: usize) -> Trace {
-        self.file.trace(self.index..offset)
+        // self.file.trace(self.index..(self.index + offset))
+        self.trace_from(self.index, offset)
     }
 
     pub fn advance(&mut self) -> char {
@@ -301,6 +302,8 @@ impl Lexer {
             "!=" => E::NotEquals,
             "==" => E::Equals,
             "::" => E::DoubleColon,
+            "=>" => E::ThickRightArrow,
+            "->" => E::ThinRightArrow,
 
             _ => return None
         };

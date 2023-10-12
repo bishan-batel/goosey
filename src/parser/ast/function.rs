@@ -9,7 +9,7 @@ use crate::ir::visibility::Visibility;
 pub struct UnparsedFunctionPrototype {
     pub name: Identifier,
     pub arguments: Vec<UnparsedVariableInfo>,
-    pub returns: Option<UnvalidatedType>,
+    pub returns: UnvalidatedType,
     pub visibility: Visibility,
 }
 
@@ -32,5 +32,6 @@ pub enum UnvalidatedFunctionExpression {
         initial: Option<UnvalidatedExpression>,
         trace: Trace,
     },
-    Expression(UnvalidatedExpression, Trace),
+    Return(Option<UnvalidatedExpression>),
+    Expression(UnvalidatedExpression),
 }

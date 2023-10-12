@@ -6,7 +6,7 @@ use crate::lexer::token::{Operator, Token, TokenData};
 
 pub type ParserResult<T> = Result<T, ParserError>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ParserError {
     UnexpectedToken(Token),
 
@@ -25,6 +25,8 @@ pub enum ParserError {
     OpenParenthetical(Trace),
 
     NonUnaryOperator(Operator, Trace),
+
+    ExpectedFunctionBody(Trace),
 }
 
 /// TODO implement more detailed error messages
@@ -46,6 +48,7 @@ impl ParserError {
             ParserError::ExpectedOperator(_, trace) => vec![trace],
             ParserError::ExpectedAnyKeyword(trace) => vec![trace],
             ParserError::ExpectedKeyword(_, trace) => vec![trace],
+            ParserError::ExpectedFunctionBody(trace) => vec![trace],
         }
     }
 }

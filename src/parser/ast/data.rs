@@ -5,8 +5,9 @@ use crate::file::identifier::Identifier;
 pub enum UnvalidatedType {
     Type(Identifier),
     Reference(Box<UnvalidatedType>),
+    Array(Box<UnvalidatedType>),
     Template {
-        owner: Box<UnvalidatedType>,
+        base: Identifier,
         template_arguments: Vec<UnvalidatedType>,
     },
     Implicit,

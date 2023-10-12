@@ -1,4 +1,3 @@
-
 use crate::file::identifier::Identifier;
 use crate::file::source_file::SourceFile;
 
@@ -48,6 +47,7 @@ pub fn test_operator() {
     {}()[]~!%^&*-+/| = < >
     : && || << >> :: %= ^= &= *=
     -= += /= <<= >>= &&= ||= <= >= != == . ,
+    => ->
     "#).rc();
 
     let tokens: Vec<TokenData> = crate::lexer::tokenize(file).into_iter().map(|Token(f, _)| f).collect();
@@ -94,6 +94,8 @@ pub fn test_operator() {
         E::Equals,
         E::Dot,
         E::Comma,
+        E::ThickRightArrow,
+        E::ThinRightArrow,
     ].map(|o| TokenData::Operator(o)).into_iter().collect::<Vec<TokenData>>();
     expect.push(TokenData::EOF);
     assert_eq!(tokens, expect)
