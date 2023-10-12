@@ -66,6 +66,10 @@ impl ExpressionParser {
         let trace = p.curr().trace().clone();
 
         Ok(match p.curr().token().clone() {
+            TokenData::StringLiteral(s) => {
+                p.advance();
+                UnvalidatedExpression::StringLiteral(s, trace)
+            }
             TokenData::BoolLiteral(l) => {
                 p.advance();
                 UnvalidatedExpression::BoolLiteral(l, trace)
