@@ -11,7 +11,6 @@ clap = { version = "4.4.6", features = ["derive"] }
 either = "1.9.0"
 emojis = "0.6.1"
 lazy_static = "1.4.0"
-mlua = { version = "0.9.1", features = ["luajit"] }
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.107"
 string-builder = "0.2.0"
