@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use crate::file::identifier::Identifier;
+use crate::file::identifier::{Identifier, Namespace};
 use crate::file::source_file::SourceFile;
 use crate::file::trace::Trace;
 use crate::ir::visibility::Visibility;
@@ -8,6 +8,7 @@ use crate::parser::ast::expression::UnvalidatedExpression;
 use crate::parser::ast::function::{UnparsedFunctionPrototype, UnvalidatedFunctionExpression};
 use crate::parser::ast::operations::BinaryOperation;
 use crate::parser::ast::top_level::UnparsedTopLevel;
+use crate::parser::ast::UnvalidatedSymbol;
 use crate::parser::error::ParserResult;
 use crate::parser::parser::Parser;
 
@@ -138,6 +139,58 @@ fn function_operator_precedence() {
                 }),
                 trace: trace(),
             }.into(),
+            trace: trace(),
+        },
+    ]))
+}
+
+#[test]
+fn function_symbols() {
+    let (vecs, trace) = parse_from(r##"
+        fun funny() {
+            printf("hello")
+            std::io::printf("hello")
+        }
+    "##);
+
+    let trace = || trace.clone();
+
+    use UnvalidatedExpression as E;
+
+    if let Err(ref e) = vecs {
+        eprintln!("{e}");
+    }
+
+    assert_eq!(vecs, Ok(vec![
+        UnparsedTopLevel::FunctionDefinition {
+            proto: UnparsedFunctionPrototype {
+                name: Identifier("funny".into()),
+                arguments: vec![],
+                returns: UnvalidatedType::Unit,
+                visibility: Visibility::Private,
+            },
+            body: E::Scope(vec![
+                E::FunctionCall {
+                    symbol: UnvalidatedSymbol {
+                        explicit_namespace: Namespace { chain: vec![] },
+                        identifier: "printf".into(),
+                    },
+                    arguments: vec![
+                        E::StringLiteral("hello".into(), trace())
+                    ],
+                    trace: trace(),
+                }.into(),
+                E::FunctionCall {
+                    symbol: UnvalidatedSymbol {
+                        explicit_namespace: Namespace { chain: vec!["std".into(), "io".into()] },
+                        identifier: "printf".into(),
+                    },
+                    arguments: vec![
+                        E::StringLiteral("hello".into(), trace())
+                    ],
+                    trace: trace(),
+                }.into(),
+            ], trace()).into(),
             trace: trace(),
         },
     ]))
