@@ -1,0 +1,27 @@
+import std::ops::Index
+
+pub struct Vec<T> {
+	raw: Box<[T]>
+	length: usize
+}
+
+impl Index for Vec<T> {
+	pub fun index([self], i: usize): ref[T] {
+		self.index  
+	}
+}
+
+impl Vec<T> {
+	pub fun new(): Vec<T> {
+		let mut vec = make Vec {
+			raw: Box::new()
+			length: 0
+		}
+
+		return   
+	}
+
+	pub fun len(ref[self]): usize {
+		self.length
+	}
+}
