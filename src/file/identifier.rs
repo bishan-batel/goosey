@@ -3,16 +3,45 @@ use serde::{Deserialize, Serialize};
 use std::ops::Deref;
 
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Clone, Hash)]
 pub struct GlobalIdentifier(pub Namespace, pub Identifier);
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Hash, Clone)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Hash, Clone)]
 pub struct Namespace {
     pub chain: Vec<Identifier>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Hash, Clone)]
+#[derive(Debug, Eq, PartialEq, Serialize, Deserialize, Hash, Clone)]
 pub struct Identifier(pub String);
+
+impl GlobalIdentifier {
+    pub fn prefix(&self, namespace: Namespace) -> Self {
+        Self(self.0.prefix(namespace), self.1.clone())
+    }
+}
+
+impl Namespace {
+    pub fn global() -> Self {
+        Self {
+            chain: vec!["main".into()],
+        }
+    }
+
+    pub fn prefix(&self, prefix: Namespace) -> Self {
+        Self {
+            chain: prefix.chain
+                .into_iter()
+                .chain(self.chain.clone().into_iter())
+                .collect(),
+        }
+    }
+
+    pub fn module(&self, ident: Identifier) -> Self {
+        let mut namespace = self.clone();
+        namespace.chain.push(ident);
+        namespace
+    }
+}
 
 
 impl Display for GlobalIdentifier {

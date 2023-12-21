@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 use crate::file::identifier::Identifier;
 use crate::file::trace::Trace;
-use crate::parser::ast::data::{UnvalidatedType, UnparsedVariableInfo};
+use crate::parser::ast::data::{UnvalidatedType, UnvalidatedVariableInfo};
 use crate::parser::ast::expression::UnvalidatedExpression;
 use crate::ir::visibility::Visibility;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Hash)]
-pub struct UnparsedFunctionPrototype {
+pub struct UnvalidatedFunctionPrototype {
     pub name: Identifier,
-    pub arguments: Vec<UnparsedVariableInfo>,
+    pub arguments: Vec<UnvalidatedVariableInfo>,
     pub returns: UnvalidatedType,
     pub visibility: Visibility,
 }
@@ -22,23 +22,13 @@ pub enum UnvalidatedFunctionExpression {
         then: Box<UnvalidatedExpression>,
         trace: Trace,
     },
-    Unless {
-        condition: UnvalidatedExpression,
-        then: Box<UnvalidatedExpression>,
-        trace: Trace,
-    },
     While {
         condition: UnvalidatedExpression,
         then: Box<UnvalidatedExpression>,
         trace: Trace,
     },
-    Until {
-        condition: UnvalidatedExpression,
-        then: Box<UnvalidatedExpression>,
-        trace: Trace,
-    },
     Let {
-        variable: UnparsedVariableInfo,
+        variable: UnvalidatedVariableInfo,
         initial: Option<UnvalidatedExpression>,
         trace: Trace,
     },

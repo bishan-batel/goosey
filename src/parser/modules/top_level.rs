@@ -2,10 +2,11 @@ use crate::file::trace::Trace;
 use crate::ir::visibility::Visibility;
 use crate::lexer::keyword::Keyword;
 use crate::lexer::token::Operator;
-use crate::parser::ast::data::{UnparsedVariableInfo, UnvalidatedType};
+use crate::parser::ast::data::{UnvalidatedVariableInfo, UnvalidatedType};
 use crate::parser::ast::expression::UnvalidatedExpression;
-use crate::parser::ast::function::{UnparsedFunctionPrototype, UnvalidatedFunctionExpression};
-use crate::parser::ast::top_level::UnparsedTopLevel;
+use crate::parser::ast::function::{UnvalidatedFunctionPrototype, UnvalidatedFunctionExpression};
+use crate::parser::ast::r#struct::{UnvalidatedEnumData, UnvalidatedEnumVariant, UnvalidatedProperty, UnvalidatedStructProperty, UnvalidatedStructPrototype};
+use crate::parser::ast::top_level::UnvalidatedTopLevel;
 use crate::parser::error::{ParserError, ParserResult};
 use crate::parser::modules::expression_parser::ExpressionParser;
 use crate::parser::parser::Parser;
@@ -14,8 +15,12 @@ pub struct TopLevelParser;
 
 
 impl TopLevelParser {
-    pub fn parse_top_level(p: &mut Parser) -> ParserResult<Option<UnparsedTopLevel>> {
-        let passes = [Self::parse_function];
+    pub fn parse_top_level(p: &mut Parser) -> ParserResult<Option<UnvalidatedTopLevel>> {
+        let passes = [
+            Self::parse_function,
+            Self::parse_import,
+            Self::parse_struct
+        ];
 
         for pass in passes {
             if let Some(statement) = pass(p)? {
@@ -25,7 +30,166 @@ impl TopLevelParser {
         Ok(None)
     }
 
-    fn parse_function(p: &mut Parser) -> ParserResult<Option<UnparsedTopLevel>> {
+    fn parse_import(p: &mut Parser) -> ParserResult<Option<UnvalidatedTopLevel>> {
+        if !p.has_keyword(Keyword::Import) {
+            return Ok(None);
+        }
+
+        let start = p.position();
+        p.advance();
+
+        let namespace = p.consume_symbol()?;
+
+        Ok(Some(UnvalidatedTopLevel::Import {
+            namespace,
+            // TODO allow star imports
+            star: false,
+            trace: p.trace_from(start),
+        }))
+    }
+
+    fn parse_struct(p: &mut Parser) -> ParserResult<Option<UnvalidatedTopLevel>> {
+        let start = p.position();
+
+        let public = if p.has_keyword(Keyword::Public) {
+            p.advance();
+            true
+        } else {
+            false
+        };
+
+        if !p.has_keyword(Keyword::Struct) {
+            // rollback to before visibility keyword
+            if public {
+                p.rollback();
+            }
+            return Ok(None);
+        }
+
+        p.advance();
+
+        let identifier = p.consume_identifier()?;
+
+        let mut properties = vec![];
+        p.expect_operator(Operator::CurlyOpen)?;
+
+        while !p.is_eof() && !p.has_operator(Operator::CurlyClose) {
+            let visibility = if p.has_keyword(Keyword::Public) {
+                p.advance();
+                Visibility::Public
+            } else {
+                Visibility::Private
+            };
+
+            let name = p.consume_identifier()?;
+            p.expect_operator(Operator::Colon)?;
+
+            let ty = p.consume_type()?;
+
+            properties.push(UnvalidatedStructProperty {
+                property: UnvalidatedProperty {
+                    name,
+                    ty,
+                },
+                visibility,
+            })
+        }
+
+
+        p.expect_operator(Operator::CurlyClose)?;
+        Ok(Some(UnvalidatedTopLevel::StructDefinition {
+            proto: UnvalidatedStructPrototype {
+                identifier,
+                properties,
+                visibility: if public { Visibility::Public } else { Visibility::Private },
+            },
+            trace: p.trace_from(start),
+        }))
+    }
+
+    fn parse_enum(p: &mut Parser) -> ParserResult<Option<UnvalidatedTopLevel>> {
+        let start = p.position();
+
+        let public = if p.has_keyword(Keyword::Public) {
+            p.advance();
+            true
+        } else {
+            false
+        };
+
+        if !p.has_keyword(Keyword::Enum) {
+            // rollback to before visibility keyword
+            if public {
+                p.rollback();
+            }
+            return Ok(None);
+        }
+
+        p.advance();
+
+        let mut variants = vec![];
+        p.expect_operator(Operator::CurlyOpen)?;
+
+        while !p.is_eof() && !p.has_operator(Operator::CurlyClose) {
+            let name = p.consume_identifier()?;
+
+            variants.push(if p.has_operator(Operator::ParenOpen) {
+                p.advance();
+
+                let mut position = vec![];
+                while !p.is_eof() && !p.has_operator(Operator::ParenClose) {
+                    position.push(p.consume_type()?);
+
+                    if p.has_operator(Operator::Comma) {
+                        p.advance();
+                        continue;
+                    }
+                    break;
+                }
+                p.expect_operator(Operator::ParenClose)?;
+
+                UnvalidatedEnumVariant {
+                    name,
+                    data: Some(UnvalidatedEnumData::Positional(position)),
+                }
+            } else if p.has_operator(Operator::CurlyOpen) {
+                p.advance();
+
+                let mut properties = vec![];
+                while !p.is_eof() && !p.has_operator(Operator::CurlyClose) {
+                    let name = p.consume_identifier()?;
+                    p.expect_operator(Operator::Colon)?;
+
+                    let ty = p.consume_type()?;
+
+                    properties.push(UnvalidatedProperty {
+                        name,
+                        ty,
+                    })
+                }
+                p.expect_operator(Operator::CurlyClose)?;
+
+                UnvalidatedEnumVariant {
+                    name,
+                    data: Some(UnvalidatedEnumData::StructLike(properties)),
+                }
+            } else {
+                UnvalidatedEnumVariant {
+                    name,
+                    data: None,
+                }
+            })
+        }
+
+
+        p.expect_operator(Operator::CurlyClose)?;
+        Ok(Some(UnvalidatedTopLevel::EnumDefinition {
+            variants,
+            trace: p.trace_from(start),
+        }))
+    }
+
+    fn parse_function(p: &mut Parser) -> ParserResult<Option<UnvalidatedTopLevel>> {
         let start = p.position();
 
         let stepped = if p.has_keyword(Keyword::Public) {
@@ -59,14 +223,14 @@ impl TopLevelParser {
             }
         };
 
-        Ok(Some(UnparsedTopLevel::FunctionDefinition {
+        Ok(Some(UnvalidatedTopLevel::FunctionDefinition {
             proto,
             body,
             trace: p.trace_from(start),
         }))
     }
 
-    fn consume_function_prototype(p: &mut Parser) -> ParserResult<UnparsedFunctionPrototype> {
+    fn consume_function_prototype(p: &mut Parser) -> ParserResult<UnvalidatedFunctionPrototype> {
         let visibility = if p.has_keyword(Keyword::Public) {
             p.advance();
             Visibility::Public
@@ -97,7 +261,7 @@ impl TopLevelParser {
 
             let arg_ty = p.consume_type()?;
 
-            arguments.push(UnparsedVariableInfo {
+            arguments.push(UnvalidatedVariableInfo {
                 ident: arg_name,
                 ty: arg_ty,
                 mutable,
@@ -118,7 +282,7 @@ impl TopLevelParser {
             UnvalidatedType::Unit
         };
 
-        Ok(UnparsedFunctionPrototype {
+        Ok(UnvalidatedFunctionPrototype {
             name,
             arguments,
             returns,

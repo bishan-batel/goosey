@@ -20,6 +20,8 @@ pub enum Keyword {
     Until,
     If,
     Unit,
+    Import,
+    Enum
 }
 
 impl Keyword {
@@ -44,6 +46,8 @@ impl Keyword {
             "as" => E::As,
             "pub" => E::Public,
             "unit" => E::Unit,
+            "import" => E::Import,
+            "enum" => E::Enum,
             _ => return None
         })
     }

@@ -15,7 +15,7 @@ pub enum UnvalidatedType {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Hash)]
-pub struct UnparsedVariableInfo {
+pub struct UnvalidatedVariableInfo {
     pub ident: Identifier,
     pub ty: UnvalidatedType,
     pub mutable: bool,

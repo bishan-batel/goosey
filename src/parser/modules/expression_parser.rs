@@ -3,7 +3,7 @@ use crate::lexer::token::{Operator, Token, TokenData};
 use crate::parser::ast::data::UnvalidatedType;
 use crate::parser::ast::expression::UnvalidatedExpression;
 use crate::parser::ast::function::UnvalidatedFunctionExpression;
-use crate::parser::ast::operations::BinaryOperation;
+use crate::parser::ast::operations::{BinaryOperation, UnaryOperator};
 use crate::parser::error::{ParserError, ParserResult};
 use crate::parser::modules::statement_parser::StatementParser;
 use crate::parser::parser::Parser;
@@ -121,7 +121,11 @@ impl ExpressionParser {
                     }
                 }
             }
+
+            // Operators
             TokenData::Operator(op) => match op {
+
+                // Parenthetical
                 Operator::ParenOpen => {
                     let start = p.position();
 
@@ -133,8 +137,20 @@ impl ExpressionParser {
                         p.trace_from(start),
                     )
                 }
+
+                Operator::Not | Operator::BitNot | Operator::Minus => {
+                    let start = p.position();
+                    p.advance();
+
+                    UnvalidatedExpression::Unary {
+                        expr: Box::new(Self::consume_expression(p)?),
+                        op: UnaryOperator::try_from(op).expect("Non unary operator"),
+                        trace: p.trace_from(start),
+                    }
+                }
                 _ => return Err(ParserError::UnexpectedToken(p.curr().clone()))
             }
+
             _ => return {
                 Err(ParserError::UnexpectedToken(p.curr().clone()))
             }

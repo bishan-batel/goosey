@@ -16,7 +16,7 @@ pub struct SourceFile {
 impl SourceFile {
     pub fn new(source: &str) -> Self {
         Self {
-            module_name: "<main>".into(),
+            module_name: "main".into(),
             source: String::from(source),
         }
     }

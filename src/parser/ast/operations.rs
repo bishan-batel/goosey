@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use crate::lexer::token::Operator;
+use crate::parser::ast::operations::UnaryOperator::Negate;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Hash)]
 pub enum BinaryOperation {
@@ -35,12 +36,26 @@ pub enum BinaryOperation {
     NotEqual,
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize, Hash)]
 pub enum UnaryOperator {
     Ref,
     Deref,
     Negate,
     Not,
     BitNot,
+}
+
+impl TryFrom<Operator> for UnaryOperator {
+    type Error = ();
+
+    fn try_from(value: Operator) -> Result<Self, Self::Error> {
+        Ok(match value {
+            Operator::Minus => UnaryOperator::Negate,
+            Operator::Not => UnaryOperator::Not,
+            Operator::BitNot => UnaryOperator::BitNot,
+            _ => return Err(())
+        })
+    }
 }
 
 impl TryFrom<Operator> for BinaryOperation {

@@ -34,8 +34,8 @@ pub fn bool() {
         TokenData::BoolLiteral(true),
         TokenData::BoolLiteral(true),
         TokenData::BoolLiteral(false),
-        TokenData::BoolLiteral(true)
-        , TokenData::EOF,
+        TokenData::BoolLiteral(true),
+        TokenData::EOF,
     ]);
 }
 

@@ -3,16 +3,17 @@ use crate::file::identifier::{Identifier, Namespace};
 use crate::file::source_file::SourceFile;
 use crate::file::trace::Trace;
 use crate::ir::visibility::Visibility;
-use crate::parser::ast::data::{UnparsedVariableInfo, UnvalidatedType};
+use crate::parser::ast::data::{UnvalidatedVariableInfo, UnvalidatedType};
 use crate::parser::ast::expression::UnvalidatedExpression;
-use crate::parser::ast::function::{UnparsedFunctionPrototype, UnvalidatedFunctionExpression};
+use crate::parser::ast::function::{UnvalidatedFunctionPrototype, UnvalidatedFunctionExpression};
 use crate::parser::ast::operations::BinaryOperation;
-use crate::parser::ast::top_level::UnparsedTopLevel;
+use crate::parser::ast::r#struct::{UnvalidatedProperty, UnvalidatedStructProperty, UnvalidatedStructPrototype};
+use crate::parser::ast::top_level::UnvalidatedTopLevel;
 use crate::parser::ast::UnvalidatedSymbol;
 use crate::parser::error::ParserResult;
 use crate::parser::parser::Parser;
 
-fn parse_from(source: &str) -> (ParserResult<Vec<UnparsedTopLevel>>, Box<dyn Fn() -> Trace>) {
+fn parse_from(source: &str) -> (ParserResult<Vec<UnvalidatedTopLevel>>, Box<dyn Fn() -> Trace>) {
     let source = SourceFile::new(source).rc();
     let trace = source.trace(0..0);
     let tokens = crate::lexer::tokenize(Rc::clone(&source));
@@ -30,8 +31,8 @@ fn function_proto() {
     ");
 
     assert_eq!(vecs, Ok(vec![
-        UnparsedTopLevel::FunctionDefinition {
-            proto: UnparsedFunctionPrototype {
+        UnvalidatedTopLevel::FunctionDefinition {
+            proto: UnvalidatedFunctionPrototype {
                 name: Identifier("no_arg".into()),
                 arguments: vec![],
                 returns: UnvalidatedType::Unit,
@@ -40,16 +41,16 @@ fn function_proto() {
             body: UnvalidatedExpression::Scope(vec![], trace()).into(),
             trace: trace(),
         },
-        UnparsedTopLevel::FunctionDefinition {
-            proto: UnparsedFunctionPrototype {
+        UnvalidatedTopLevel::FunctionDefinition {
+            proto: UnvalidatedFunctionPrototype {
                 name: Identifier("args".into()),
                 arguments: vec![
-                    UnparsedVariableInfo {
+                    UnvalidatedVariableInfo {
                         ident: "_0".into(),
                         ty: UnvalidatedType::Type("i32".into()),
                         mutable: false,
                     },
-                    UnparsedVariableInfo {
+                    UnvalidatedVariableInfo {
                         ident: "_1".into(),
                         ty: UnvalidatedType::Type("i64".into()),
                         mutable: false,
@@ -61,8 +62,8 @@ fn function_proto() {
             body: UnvalidatedExpression::Scope(vec![], trace()).into(),
             trace: trace(),
         },
-        UnparsedTopLevel::FunctionDefinition {
-            proto: UnparsedFunctionPrototype {
+        UnvalidatedTopLevel::FunctionDefinition {
+            proto: UnvalidatedFunctionPrototype {
                 name: Identifier("returns".into()),
                 arguments: vec![],
                 returns: UnvalidatedType::Reference(Box::new(UnvalidatedType::Type("i32".into()))),
@@ -81,8 +82,8 @@ fn function_oneline() {
     ");
 
     assert_eq!(vecs, Ok(vec![
-        UnparsedTopLevel::FunctionDefinition {
-            proto: UnparsedFunctionPrototype {
+        UnvalidatedTopLevel::FunctionDefinition {
+            proto: UnvalidatedFunctionPrototype {
                 name: Identifier("funny".into()),
                 arguments: vec![],
                 returns: UnvalidatedType::Unit,
@@ -104,8 +105,8 @@ fn function_operator_precedence() {
     use UnvalidatedExpression as E;
 
     assert_eq!(vecs, Ok(vec![
-        UnparsedTopLevel::FunctionDefinition {
-            proto: UnparsedFunctionPrototype {
+        UnvalidatedTopLevel::FunctionDefinition {
+            proto: UnvalidatedFunctionPrototype {
                 name: Identifier("funny".into()),
                 arguments: vec![],
                 returns: UnvalidatedType::Unit,
@@ -160,8 +161,8 @@ fn function_symbols() {
     }
 
     assert_eq!(vecs, Ok(vec![
-        UnparsedTopLevel::FunctionDefinition {
-            proto: UnparsedFunctionPrototype {
+        UnvalidatedTopLevel::FunctionDefinition {
+            proto: UnvalidatedFunctionPrototype {
                 name: Identifier("funny".into()),
                 arguments: vec![],
                 returns: UnvalidatedType::Unit,
@@ -189,6 +190,95 @@ fn function_symbols() {
                     trace: trace(),
                 }.into(),
             ], trace()).into(),
+            trace: trace(),
+        },
+    ]))
+}
+
+#[test]
+fn struct_declaration() {
+    let (vecs, trace) = parse_from(r##"
+    struct Vector3 {
+        pub x: f32
+        y: f32
+        pub z: f32
+    }
+
+    pub struct Dummy {}
+
+    pub struct Vector2 {
+        pub x: f32
+        pub y: f32
+    }
+    "##);
+
+    use UnvalidatedTopLevel as UTL;
+    use UnvalidatedExpression as E;
+
+    if let Err(ref e) = vecs {
+        eprintln!("{e}");
+    }
+
+    assert_eq!(vecs, Ok(vec![
+        UTL::StructDefinition {
+            proto: UnvalidatedStructPrototype {
+                identifier: "Vector3".into(),
+                properties: vec![
+                    UnvalidatedStructProperty {
+                        property: UnvalidatedProperty {
+                            name: "x".into(),
+                            ty: UnvalidatedType::Type("f32".into()),
+                        },
+                        visibility: Visibility::Public,
+                    },
+                    UnvalidatedStructProperty {
+                        property: UnvalidatedProperty {
+                            name: "y".into(),
+                            ty: UnvalidatedType::Type("f32".into()),
+                        },
+                        visibility: Visibility::Private,
+                    },
+                    UnvalidatedStructProperty {
+                        property: UnvalidatedProperty {
+                            name: "z".into(),
+                            ty: UnvalidatedType::Type("f32".into()),
+                        },
+                        visibility: Visibility::Public,
+                    },
+                ],
+                visibility: Visibility::Private,
+            },
+            trace: trace(),
+        },
+        UTL::StructDefinition {
+            proto: UnvalidatedStructPrototype {
+                identifier: "Dummy".into(),
+                properties: vec![],
+                visibility: Visibility::Public,
+            },
+            trace: trace(),
+        },
+        UTL::StructDefinition {
+            proto: UnvalidatedStructPrototype {
+                identifier: "Vector2".into(),
+                properties: vec![
+                    UnvalidatedStructProperty {
+                        property: UnvalidatedProperty {
+                            name: "x".into(),
+                            ty: UnvalidatedType::Type("f32".into()),
+                        },
+                        visibility: Visibility::Public,
+                    },
+                    UnvalidatedStructProperty {
+                        property: UnvalidatedProperty {
+                            name: "y".into(),
+                            ty: UnvalidatedType::Type("f32".into()),
+                        },
+                        visibility: Visibility::Public,
+                    },
+                ],
+                visibility: Visibility::Public,
+            },
             trace: trace(),
         },
     ]))

@@ -2,7 +2,7 @@ use crate::file::identifier::{Identifier, Namespace};
 use crate::file::trace::Trace;
 use crate::parser::ast::data::UnvalidatedType;
 use crate::parser::ast::function::UnvalidatedFunctionExpression;
-use crate::parser::ast::operations::BinaryOperation;
+use crate::parser::ast::operations::{BinaryOperation, UnaryOperator};
 use crate::parser::ast::UnvalidatedSymbol;
 
 #[derive(Debug, PartialEq)]
@@ -31,6 +31,11 @@ pub enum UnvalidatedExpression {
         /// Binary Operator
         op: BinaryOperation,
         rhs: Box<UnvalidatedExpression>,
+        trace: Trace,
+    },
+    Unary {
+        expr: Box<UnvalidatedExpression>,
+        op: UnaryOperator,
         trace: Trace,
     },
     Cast {
@@ -82,6 +87,7 @@ impl UnvalidatedExpression {
             UnvalidatedExpression::VariableReference { trace, .. } => trace,
             UnvalidatedExpression::ObjectProperty { .. } => todo!(),
             UnvalidatedExpression::Cast { trace, .. } => trace,
+            UnvalidatedExpression::Unary { trace, .. } => trace,
         }).clone()
     }
 }

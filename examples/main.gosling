@@ -6,18 +6,8 @@ pub struct Vector2 {
 	pub y: f32
 }
 
-pub struct Box<T> {
-	raw_ptr: ref[T]
-}
-
-impl Deref for Box<T> {
-	fun deref(ref[self]): ref[T] {
-		return self.raw_ptr
-	}
-}
-
 impl Vector2 {
-
+	
 	pub fun new(x: f32, y: f32) => make Vector2 { x: 0 y: 1  } 
 
 	pub fun zero() => Vector2::new(0, 0) 
@@ -42,13 +32,37 @@ pub struct Array<T> {
 	raw_ptr: ref[T]
 }
 
+
+
 // calculate fizz buzz up to a number
-pub fun main(argc: int, arg_ptr: ref[ref[char]]): i32 { 
+pub fun main(argc: usize, arg_ptr: ref[ref[char]]): i32 { 
 	let args: [char] = arg_ptr.to_array(argc as usize)
 
-	if argc < 1  {
+
+	let mut a: i64 
+
+	if argc == 0  {
 		println!("Please specify a number");
 		return 1
+	}
+
+	while true { 
+	}
+
+	until false {
+	}
+
+	unless argc > 0 {
+		println!("Please specify a number");
+		return 1
+	}
+
+	let a = 0
+
+
+	let a = alloc Vector2 {
+		x: 0
+		y: 0
 	}
 
 	let num_res = usize::parse(args[0])
@@ -60,10 +74,19 @@ pub fun main(argc: int, arg_ptr: ref[ref[char]]): i32 {
 
 	let num = num_res.unwrap()
 
-	fizz_buzz(num);
+
+	fizz_buzz(num)
 
 	return 0
 }
 
 pub fun fizz_buzz(upper: usize) {
+
+	a += 1 
 }
+
+
+/* 
+it has to be 2D 
+we should make terraria sex update 
+*/

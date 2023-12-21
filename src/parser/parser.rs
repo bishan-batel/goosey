@@ -6,7 +6,7 @@ use crate::file::trace::Trace;
 use crate::lexer::keyword::Keyword;
 use crate::lexer::token::{Operator, Token, TokenData};
 use crate::parser::ast::data::UnvalidatedType;
-use crate::parser::ast::top_level::UnparsedTopLevel;
+use crate::parser::ast::top_level::UnvalidatedTopLevel;
 use crate::parser::ast::UnvalidatedSymbol;
 use crate::parser::error::{ParserError, ParserResult};
 use crate::parser::modules::top_level::TopLevelParser;
@@ -164,7 +164,7 @@ impl Parser {
         })
     }
 
-    pub fn parse(mut self) -> ParserResult<Vec<UnparsedTopLevel>> {
+    pub fn parse(mut self) -> ParserResult<Vec<UnvalidatedTopLevel>> {
         let mut statements = vec![];
 
         let passes = &[TopLevelParser::parse_top_level];
